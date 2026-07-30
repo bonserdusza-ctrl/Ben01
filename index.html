@@ -3,23 +3,119 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>Menghubungkan ke WhatsApp...</title>
 
-  <script>
-    window.location.replace(
-      "https://wa.me/601121101084?text=Hi%2C%20saya%20ingin%20mengetahui%20maklumat%20lanjut."
-    );
-  </script>
+  <style>
+    body {
+      margin: 0;
+      padding: 30px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #ffffff;
+      color: #333333;
+    }
+
+    a {
+      color: #25D366;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
   <p>Sedang menghubungkan anda ke WhatsApp...</p>
+  <p id="fallback"></p>
 
-  <p>
-    Jika WhatsApp tidak dibuka secara automatik,
-    <a href="https://wa.me/601121101084?text=Hi%2C%20saya%20ingin%20mengetahui%20maklumat%20lanjut.">
-      klik di sini
-    </a>.
-  </p>
+  <script>
+    (() => {
+      /* 在这里填写WhatsApp号码 */
+      const rawNumbers = [
+        "601121101084",
+        "601121397178",
+      ];
+
+      /* 自动清理号码中的空格、+号和横线 */
+      const numbers = [...new Set(
+        rawNumbers
+          .map(number => String(number).replace(/\D/g, ""))
+          .filter(number => /^\d{8,15}$/.test(number))
+      )];
+
+      const BAG_KEY = "wa_shuffle_bag_v1";
+      const LAST_KEY = "wa_last_number_v1";
+
+      /* 随机打乱号码 */
+      function shuffle(list) {
+        const result = [...list];
+
+        for (let i = result.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [result[i], result[j]] = [result[j], result[i]];
+        }
+
+        return result;
+      }
+
+      /* 获取本轮未使用的号码 */
+      function getBag() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(BAG_KEY));
+
+          if (
+            Array.isArray(saved) &&
+            saved.length > 0 &&
+            saved.every(number => numbers.includes(number))
+          ) {
+            return saved;
+          }
+        } catch (error) {}
+
+        let newBag = shuffle(numbers);
+        const lastNumber = localStorage.getItem(LAST_KEY);
+
+        /* 避免新一轮第一个号码与上一次相同 */
+        if (
+          newBag.length > 1 &&
+          newBag[newBag.length - 1] === lastNumber
+        ) {
+          [newBag[0], newBag[newBag.length - 1]] =
+          [newBag[newBag.length - 1], newBag[0]];
+        }
+
+        return newBag;
+      }
+
+      if (numbers.length === 0) {
+        document.getElementById("fallback").textContent =
+          "Nombor WhatsApp tidak tersedia.";
+        return;
+      }
+
+      const bag = getBag();
+      const selectedNumber = bag.pop();
+
+      localStorage.setItem(BAG_KEY, JSON.stringify(bag));
+      localStorage.setItem(LAST_KEY, selectedNumber);
+
+      /* WhatsApp预设消息 */
+      const message =
+        "Hi, saya ingin mengetahui maklumat lanjut.";
+
+      const whatsappUrl =
+        "https://wa.me/" +
+        selectedNumber +
+        "?text=" +
+        encodeURIComponent(message);
+
+      /* 显示备用点击链接 */
+      document.getElementById("fallback").innerHTML =
+        'Jika WhatsApp tidak dibuka, ' +
+        '<a href="' + whatsappUrl + '">klik di sini</a>.';
+
+      /* 自动跳转 */
+      window.location.replace(whatsappUrl);
+    })();
+  </script>
 </body>
 </html>
