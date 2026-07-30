@@ -1,131 +1,25 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="ms">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menghubungkan ke WhatsApp...</title>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  background: #ffffff;
-  display: none;
-}
-</style>
-
-<script>
-(() => {
-  const rawUsers = [
-    "AdsBox_cs"
-  ];
-
-  const KEY_BAG = "tg_shuffle_bag_page4";
-  const KEY_LAST = "tg_last_pick_page4";
-
-  function sanitizeUsers(list) {
-    const seen = new Set();
-    const cleaned = [];
-
-    for (let i = 0; i < list.length; i++) {
-      const v = String(list[i]).trim().replace(/^@+/, "");
-      if (/^[A-Za-z0-9_]{5,32}$/.test(v) && !seen.has(v)) {
-        seen.add(v);
-        cleaned.push(v);
-      }
-    }
-
-    return cleaned;
-  }
-
-  const users = sanitizeUsers(rawUsers);
-
-  function shuffle(arr) {
-    const copy = arr.slice();
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = (Math.random() * (i + 1)) | 0;
-      const t = copy[i];
-      copy[i] = copy[j];
-      copy[j] = t;
-    }
-    return copy;
-  }
-
-  function loadBag() {
-    try {
-      const raw = localStorage.getItem(KEY_BAG);
-      if (!raw) return null;
-
-      const bag = JSON.parse(raw);
-      if (!Array.isArray(bag)  bag.length === 0) return null;
-
-      const valid = [];
-      for (let i = 0; i < bag.length; i++) {
-        if (users.indexOf(bag[i]) !== -1) valid.push(bag[i]);
-      }
-
-      return valid.length ? valid : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function saveBag(bag) {
-    try {
-      localStorage.setItem(KEY_BAG, JSON.stringify(bag));
-    } catch {}
-  }
-
-  function getLastPick() {
-    try {
-      return localStorage.getItem(KEY_LAST)  "";
-    } catch {
-      return "";
-    }
-  }
-
-  function setLastPick(value) {
-    try {
-      localStorage.setItem(KEY_LAST, value);
-    } catch {}
-  }
-
-  function pickUser() {
-    if (!users.length) return "";
-
-    let bag = loadBag();
-    const lastPick = getLastPick();
-
-    if (!bag || bag.length === 0) {
-      bag = shuffle(users);
-
-      if (bag.length > 1 && bag[0] === lastPick) {
-        const t = bag[0];
-        bag[0] = bag[1];
-        bag[1] = t;
-      }
-    }
-
-    const pick = bag[0];
-    saveBag(bag.slice(1));
-    setLastPick(pick);
-
-    return pick;
-  }
-
-  const username = pickUser();
-
-  if (username) {
-    location.replace("https://t.me/" + username);
-  } else {
-    window.addEventListener("DOMContentLoaded", function () {
-      document.body.style.display = "block";
-      document.body.textContent = "No valid Telegram username found.";
-    });
-  }
-})();
-</script>
-
+  <script>
+    window.location.replace(
+      "https://wa.me/601121101084?text=Hi%2C%20saya%20ingin%20mengetahui%20maklumat%20lanjut."
+    );
+  </script>
 </head>
-<body></body>
+
+<body>
+  <p>Sedang menghubungkan anda ke WhatsApp...</p>
+
+  <p>
+    Jika WhatsApp tidak dibuka secara automatik,
+    <a href="https://wa.me/601121101084?text=Hi%2C%20saya%20ingin%20mengetahui%20maklumat%20lanjut.">
+      klik di sini
+    </a>.
+  </p>
+</body>
 </html>
