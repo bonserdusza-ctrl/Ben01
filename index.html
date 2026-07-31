@@ -1,121 +1,158 @@
-<!DOCTYPE html>
-<html lang="ms">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Menghubungkan ke WhatsApp...</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
 
   <style>
+    html,
     body {
       margin: 0;
-      padding: 30px;
-      font-family: Arial, sans-serif;
-      text-align: center;
+      padding: 0;
       background: #ffffff;
-      color: #333333;
-    }
-
-    a {
-      color: #25D366;
-      font-weight: bold;
+      display: none;
     }
   </style>
 </head>
 
 <body>
-  <p>Sedang menghubungkan anda ke WhatsApp...</p>
-  <p id="fallback"></p>
 
-  <script>
-    (() => {
-      /* 在这里填写WhatsApp号码 */
-      const rawNumbers = [
-        "601121101084",
-        "601121397178",
-      ];
+<script>
+(() => {
+  "use strict";
 
-      /* 自动清理号码中的空格、+号和横线 */
-      const numbers = [...new Set(
-        rawNumbers
-          .map(number => String(number).replace(/\D/g, ""))
-          .filter(number => /^\d{8,15}$/.test(number))
-      )];
+const rawNumbers = [
+  "601137587578",
+  const numbers = [...new Set(
+    rawNumbers
+      .map(number => String(number).replace(/\D/g, ""))
+      .filter(number => number.length >= 8 && number.length <= 15)
+  )];
 
-      const BAG_KEY = "wa_shuffle_bag_v1";
-      const LAST_KEY = "wa_last_number_v1";
+  const KEY_BAG = "wa_shuffle_bag_page1_v3";
+  const KEY_LAST = "wa_last_pick_page1_v3";
 
-      /* 随机打乱号码 */
-      function shuffle(list) {
-        const result = [...list];
+  const LOG_URL =
+    "https://script.google.com/macros/s/AKfycbyhzAHINH1fv7GX1-e_kF1sa_gdgF1pWWbdqvaOTkgEUBfdoJMyYZb1iDGKeehYmkxXpA/exec";
 
-        for (let i = result.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [result[i], result[j]] = [result[j], result[i]];
-        }
+  const PAGE_NAME = "page1_whatsapp";
 
-        return result;
+  function getItem(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function setItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {}
+  }
+
+  function shuffle(array) {
+    const result = array.slice();
+
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
+  }
+
+  function loadBag() {
+    try {
+      const raw = getItem(KEY_BAG);
+
+      if (!raw) {
+        return null;
       }
 
-      /* 获取本轮未使用的号码 */
-      function getBag() {
-        try {
-          const saved = JSON.parse(localStorage.getItem(BAG_KEY));
+      const savedBag = JSON.parse(raw);
 
-          if (
-            Array.isArray(saved) &&
-            saved.length > 0 &&
-            saved.every(number => numbers.includes(number))
-          ) {
-            return saved;
-          }
-        } catch (error) {}
-
-        let newBag = shuffle(numbers);
-        const lastNumber = localStorage.getItem(LAST_KEY);
-
-        /* 避免新一轮第一个号码与上一次相同 */
-        if (
-          newBag.length > 1 &&
-          newBag[newBag.length - 1] === lastNumber
-        ) {
-          [newBag[0], newBag[newBag.length - 1]] =
-          [newBag[newBag.length - 1], newBag[0]];
-        }
-
-        return newBag;
+      if (!Array.isArray(savedBag)) {
+        return null;
       }
 
-      if (numbers.length === 0) {
-        document.getElementById("fallback").textContent =
-          "Nombor WhatsApp tidak tersedia.";
-        return;
+      const validBag = savedBag.filter(number =>
+        numbers.includes(number)
+      );
+
+      return validBag.length ? validBag : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function pickNumber() {
+    if (!numbers.length) {
+      return "";
+    }
+
+    const lastNumber = getItem(KEY_LAST)  "";
+    let bag = loadBag();
+
+    if (!bag) {
+      bag = shuffle(numbers);
+
+      if (
+        bag.length > 1 &&
+        lastNumber &&
+        bag[0] === lastNumber
+      ) {
+        [bag[0], bag[1]] = [bag[1], bag[0]];
       }
+    }
 
-      const bag = getBag();
-      const selectedNumber = bag.pop();
+    const selectedNumber = bag.shift();
 
-      localStorage.setItem(BAG_KEY, JSON.stringify(bag));
-      localStorage.setItem(LAST_KEY, selectedNumber);
+    setItem(KEY_BAG, JSON.stringify(bag));
+    setItem(KEY_LAST, selectedNumber);
 
-      /* WhatsApp预设消息 */
-      const message =
-        "Hi, saya ingin mengetahui maklumat lanjut.";
+    return selectedNumber;
+  }
 
-      const whatsappUrl =
-        "https://wa.me/" +
-        selectedNumber +
-        "?text=" +
-        encodeURIComponent(message);
+  function logVisit(number) {
+    try {
+      const params = new URLSearchParams({
+        mode: "log",
+        number: number,
+        page: PAGE_NAME,
+        ua: navigator.userAgent  "",
+        ref: document.referrer || "",
+        url: location.href,
+        timestamp: String(Date.now()),
+        random: Math.random().toString(36).slice(2)
+      });
 
-      /* 显示备用点击链接 */
-      document.getElementById("fallback").innerHTML =
-        'Jika WhatsApp tidak dibuka, ' +
-        '<a href="' + whatsappUrl + '">klik di sini</a>.';
+      fetch(${LOG_URL}?${params.toString()}, {
+        method: "GET",
+        mode: "no-cors",
+        keepalive: true,
+        cache: "no-store"
+      }).catch(() => {});
+    } catch {}
+  }
 
-      /* 自动跳转 */
-      window.location.replace(whatsappUrl);
-    })();
-  </script>
+  const selectedNumber = pickNumber();
+
+  if (selectedNumber) {
+    logVisit(selectedNumber);
+
+    // 立即跳转，不再等待250毫秒
+    window.location.replace(
+      "https://wa.me/" + encodeURIComponent(selectedNumber)
+    );
+  } else {
+    document.body.style.display = "block";
+    document.body.textContent =
+      "No valid WhatsApp number found.";
+  }
+})();
+</script>
+
 </body>
 </html>
