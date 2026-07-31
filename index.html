@@ -1,159 +1,101 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ms">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Hubungi WhatsApp</title>
 
   <style>
-    html,
     body {
       margin: 0;
-      padding: 0;
-      background: #ffffff;
-      display: none;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f5f7f6;
+      font-family: Arial, sans-serif;
+      color: #333;
+      text-align: center;
+    }
+
+    .box {
+      width: 85%;
+      max-width: 400px;
+      padding: 32px 20px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 14px 25px;
+      background: #25D366;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 8px;
     }
   </style>
 </head>
 
 <body>
+  <div class="box">
+    <h2>Menghubungkan ke WhatsApp</h2>
+    <p>Sila tunggu sebentar...</p>
 
-<script>
-(() => {
-  "use strict";
+    <a id="whatsappButton" class="button" href="#">
+      Buka WhatsApp
+    </a>
+  </div>
 
-const rawNumbers = [
-  "601137587578",
-  "601121397178",
-  const numbers = [...new Set(
-    rawNumbers
-      .map(number => String(number).replace(/\D/g, ""))
-      .filter(number => number.length >= 8 && number.length <= 15)
-  )];
+  <script>
+    (() => {
+      /* 填写你的WhatsApp号码 */
+      const rawNumbers = [
+        "601121397178",
+        "601137587578",
+      ];
 
-  const KEY_BAG = "wa_shuffle_bag_page1_v3";
-  const KEY_LAST = "wa_last_pick_page1_v3";
+      /* 清理及检查号码 */
+      const numbers = [...new Set(
+        rawNumbers
+          .map(number => String(number).replace(/\D/g, ""))
+          .filter(number => /^\d{8,15}$/.test(number))
+      )];
 
-  const LOG_URL =
-    "https://script.google.com/macros/s/AKfycbyhzAHINH1fv7GX1-e_kF1sa_gdgF1pWWbdqvaOTkgEUBfdoJMyYZb1iDGKeehYmkxXpA/exec";
-
-  const PAGE_NAME = "page1_whatsapp";
-
-  function getItem(key) {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
-  }
-
-  function setItem(key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch {}
-  }
-
-  function shuffle(array) {
-    const result = array.slice();
-
-    for (let i = result.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
-    }
-
-    return result;
-  }
-
-  function loadBag() {
-    try {
-      const raw = getItem(KEY_BAG);
-
-      if (!raw) {
-        return null;
+      if (numbers.length === 0) {
+        document.querySelector(".box").innerHTML =
+          "<h2>Nombor WhatsApp tidak tersedia</h2>";
+        return;
       }
 
-      const savedBag = JSON.parse(raw);
+      /* 随机选择一个号码 */
+      const selectedNumber =
+        numbers[Math.floor(Math.random() * numbers.length)];
 
-      if (!Array.isArray(savedBag)) {
-        return null;
-      }
+      /* 自动预设消息 */
+      const message =
+        "Hi, saya ingin mengetahui maklumat lanjut.";
 
-      const validBag = savedBag.filter(number =>
-        numbers.includes(number)
-      );
+      /* 兼容性更好的WhatsApp链接 */
+      const whatsappUrl =
+        "https://api.whatsapp.com/send?phone=" +
+        selectedNumber +
+        "&text=" +
+        encodeURIComponent(message);
 
-      return validBag.length ? validBag : null;
-    } catch {
-      return null;
-    }
-  }
+      /* 设置手动点击按钮 */
+      const button = document.getElementById("whatsappButton");
+      button.href = whatsappUrl;
 
-  function pickNumber() {
-    if (!numbers.length) {
-      return "";
-    }
-
-    const lastNumber = getItem(KEY_LAST)  "";
-    let bag = loadBag();
-
-    if (!bag) {
-      bag = shuffle(numbers);
-
-      if (
-        bag.length > 1 &&
-        lastNumber &&
-        bag[0] === lastNumber
-      ) {
-        [bag[0], bag[1]] = [bag[1], bag[0]];
-      }
-    }
-
-    const selectedNumber = bag.shift();
-
-    setItem(KEY_BAG, JSON.stringify(bag));
-    setItem(KEY_LAST, selectedNumber);
-
-    return selectedNumber;
-  }
-
-  function logVisit(number) {
-    try {
-      const params = new URLSearchParams({
-        mode: "log",
-        number: number,
-        page: PAGE_NAME,
-        ua: navigator.userAgent  "",
-        ref: document.referrer || "",
-        url: location.href,
-        timestamp: String(Date.now()),
-        random: Math.random().toString(36).slice(2)
-      });
-
-      fetch(${LOG_URL}?${params.toString()}, {
-        method: "GET",
-        mode: "no-cors",
-        keepalive: true,
-        cache: "no-store"
-      }).catch(() => {});
-    } catch {}
-  }
-
-  const selectedNumber = pickNumber();
-
-  if (selectedNumber) {
-    logVisit(selectedNumber);
-
-    // 立即跳转，不再等待250毫秒
-    window.location.replace(
-      "https://wa.me/" + encodeURIComponent(selectedNumber)
-    );
-  } else {
-    document.body.style.display = "block";
-    document.body.textContent =
-      "No valid WhatsApp number found.";
-  }
-})();
-</script>
-
+      /* 1秒后自动跳转 */
+      setTimeout(() => {
+        window.location.href = whatsappUrl;
+      }, 1000);
+    })();
+  </script>
 </body>
 </html>
